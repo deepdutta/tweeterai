@@ -7,11 +7,10 @@ const Login = ()=> {
 
     const [state , setState] = useState({
         email : "",
-        password : "",
-        showErrorMsg : false
+        password : ""
     })
 
-    
+    const [showMessage , setShowMessage] = useState(false);
 
     // For Handling onChange of the Form Input Elements
 
@@ -23,20 +22,28 @@ const Login = ()=> {
         }))
     }
 
+    // For form validation
+
+    const validation= () =>
+    {
+        console.log('Getting Called');
+        if (!state.email) {
+            setShowMessage(true);
+        }
+       
+    }
+
     // For Submitting the login form
 
     const loginButtonHandler = (e) =>{
         e.preventDefault();
-        alert(state.email);
-        alert(state.password);
-        alert(state.showErrorMsg);
-        setState(prevState => ({
-            ...prevState,
-            [showErrorMsg] : true
-        }))
-        alert(state.showErrorMsg);
-    }
+        if(validation())
+        {
 
+        }
+        
+    }
+    console.log("Hello World");
     return (
 
         <div className="inBody d-flex flex-column">
@@ -52,16 +59,18 @@ const Login = ()=> {
                     Login to continue!
                 </h3>
                 <form action="">
+                    { showMessage && (
                     <div  className="form-error-message" >Email Is Required</div>
+                    )}
                     <div className="form-group ">
                         <input type="email" name="email" id="email" value={state.email}
-                       onChange={handleChange} className="login-input" placeholder="Enter your email"  autocomplete="off"/>
+                       onChange={handleChange} className="login-input" placeholder="Enter your email"  autoComplete="off"/>
                     </div>
                     <div className="form-group">
-                        <input type="password" name="password"  className="login-input" id="password" placeholder="Password" autocomplete="off" value={state.password}
+                        <input type="password" name="password"  className="login-input" id="password" placeholder="Password" autoComplete="off" value={state.password}
                         onChange={handleChange} />
                     </div>
-                    <div class="form-group">
+                    <div className="form-group">
                         <button className="btn btnSubmit" type="button" id="login" onClick={loginButtonHandler}>
                             Login
                         </button>
