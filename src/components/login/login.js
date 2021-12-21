@@ -1,16 +1,21 @@
 import React , {useState} from 'react';
-
+import {kyubiExtensionId}  from "../../config";
+import AuthServices from "../../services/authService";
+import { useNavigate } from 'react-router-dom';
 
 const Login = ()=> {
+
+    const navigate = useNavigate();
 
     // For defining Initial State
 
     const [state , setState] = useState({
         email : "",
-        password : ""
+        password : "",
+        errorMessage: ""
     })
 
-    const [showMessage , setShowMessage] = useState(false);
+   
 
     // For Handling onChange of the Form Input Elements
 
@@ -27,23 +32,88 @@ const Login = ()=> {
     const validation= () =>
     {
         console.log('Getting Called');
+        let emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        let checkResult = emailRegex.test(String(state.email).toLowerCase());
+        let formIsValid = true;
+
         if (!state.email) {
-            setShowMessage(true);
+            formIsValid = false;
+            setState(prevState => ({
+                ...prevState,
+               ['errorMessage'] : 'Email Is Required'
+            }))
+            return formIsValid;
         }
+        else if (checkResult === false) {
+            formIsValid = false;
+            setState(prevState => ({
+                ...prevState,
+               ['errorMessage'] : 'Please enter a proper email'
+            }));
+            return formIsValid;
+        }
+        else if (!state.password) {
+            formIsValid = false;
+            setState(prevState => ({
+                ...prevState,
+               ['errorMessage'] : 'Password Is Required'
+            }));
+            return formIsValid;
+            }
+            else{
+                formIsValid = true;
+                return formIsValid;
+            }
+            
+            return formIsValid;
        
     }
 
     // For Submitting the login form
 
-    const loginButtonHandler = (e) =>{
+    const loginButtonHandler = async (e) =>{
         e.preventDefault();
         if(validation())
         {
+            setState(prevState => ({
+                ...prevState,
+               ['errorMessage'] : ''
+            }));
+            let payload  ={
+                extensionId: kyubiExtensionId,
+                email: state.email,
+                password: state.password,
+            }
+            await AuthServices.login(payload).then(async result=>{
+                if(result.data.code  === 1){
+                    let token = result.data.token;
+                    let tokens = token.split(".");
+                    tokens =atob(tokens[1]);
+                    let myObj = JSON.parse(tokens);
+                    console.log("Tis Is my Obj",myObj)
+                    localStorage.setItem('kyubi_user_token', myObj.user.id);
+                    navigate('/dashboard');
+                  
+                }else{
+                   
+                    setState(prevState => ({
+                        ...prevState,
+                       ['errorMessage'] : 'User not found or In-Active'
+                    }));
+                }
+                
 
+            }).catch(error=>{
+                console.log(error);
+                setState(prevState => ({
+                    ...prevState,
+                   ['errorMessage'] : 'User not found or In-Active'
+                }));
+            });
         }
         
     }
-    console.log("Hello World");
+    
     return (
 
         <div className="inBody d-flex flex-column">
@@ -59,8 +129,8 @@ const Login = ()=> {
                     Login to continue!
                 </h3>
                 <form action="">
-                    { showMessage && (
-                    <div  className="form-error-message" >Email Is Required</div>
+                    { state.errorMessage && (
+                    <div  className="form-error-message" >{state.errorMessage}</div>
                     )}
                     <div className="form-group ">
                         <input type="email" name="email" id="email" value={state.email}
@@ -82,7 +152,7 @@ const Login = ()=> {
                         <p>Don’t have an account? <a href="javascript:void(0)" target="_blank" id="sign_up_link">Sign Up Now</a></p>
                     </div>
                 </form>
-                <div  className="form-error-message">Please enter valid credentials or user is in-active</div>
+                {/* <div  className="form-error-message">Please enter valid credentials or user is in-active</div> */}
             </div>
         </div>
         
